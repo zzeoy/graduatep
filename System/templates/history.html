@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %} 统计信息 {% endblock %}
+
+{% block content %}
+    <style>
+table tbody {
+display:block;
+height:195px;
+overflow-y:scroll;
+}
+
+table thead, tbody tr {
+display:table;
+width:100%;
+table-layout:fixed;
+}
+
+table thead {
+width: calc( 100% - 1em )
+}
+table thead th{ background:#ccc;}
+</style>
+
+    <div >
+        <h1 style="text-align:center;color: #5e5d5d">离线调度历史记录</h1>
+    <table class="table">
+    <thead>
+        <tr>
+            <th colspan="2"style="font-weight: bold;font-size: 15px;color: #3c3c3c">训练的数据名</th>
+            <th colspan="2"style="font-weight: bold;font-size: 15px;color: #3c3c3c">训练时间</th>
+            <th colspan="2"style="font-weight: bold;font-size: 15px;color: #3c3c3c">训练方式</th>
+            <th colspan="2"style="font-weight: bold;font-size: 15px;color: #3c3c3c">res</th>
+        </tr>
+    </thead>
+        <tbody>
+           {% for data in dataset %}
+
+            <tr>
+             {% for j in data.showdata%}
+                <td style="font-weight: bold;font-size: 15px;color:#6f7979;">{{j}}</td>
+             {% endfor %}
+            <td>
+                 <a href="/RE/{{ data.record_id }}">
+             <button class="btn btn-default btn-lg btn-info" width=50>训练结果</button>
+                 </a>
+                <a href="/DR/{{ data.record_id }}">
+                <button class="btn btn-default btn-lg btn-info" width=50>删除</button>
+                </a>
+            </td>
+            </tr>
+           {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+{% endblock %}

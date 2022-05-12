@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %} 统计信息 {% endblock %}
+
+{% block content %}
+<style>
+table tbody {
+display:block;
+height:195px;
+overflow-y:scroll;
+}
+
+table thead, tbody tr {
+display:table;
+width:100%;
+table-layout:fixed;
+}
+
+table thead {
+width: calc( 100% - 1em )
+}
+table thead th{ background:#ccc;}
+button.train{
+    background-color: #97d4e7;
+    color: white;
+    border: none;
+    text-align: center;
+    border-radius: 10px;
+    front-size: 20px;
+    padding: 10px;
+}
+button.train:hover{
+    background-color: #50b4d2;
+    color: white;
+    border: none;}
+button.mydelete{
+    background-color: #939fa2;
+    color: #f6f6f8;
+    border: none;
+    text-align: center;
+    border-radius: 10px;
+    front-size: 20px;
+    padding: 10px;
+}
+button.mydelete:hover{
+    background-color: #5b656b;
+    color: white;
+    border: none;}
+</style>
+
+    <div>
+<h1 style="text-align:center;color: #5e5d5d">上传的数据</h1>
+    <table class="table">
+    <thead>
+        <tr>
+            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">数据名</th>
+            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">上传时间</th>
+            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">处理机</th>
+            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">推荐使用调度算法</th>
+            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">训练次数</th>
+            <th colspan="2"width="250"style="font-weight: bold;font-size: 15px;color: #3c3c3c">进行训练</th>
+        </tr>
+    </thead>
+        <tbody>
+           {% for data in dataset %}
+
+            <tr>
+             {% for j in data.showdata %}
+                <td width="150" style="font-weight: bold;font-size: 15px;color:#6f7979;">{{j}}</td>
+             {% endfor %}
+            <td width="250px">
+              <a href="/GA/{{ data.task_id }}">
+             <button class="train "   >GA调度</button>
+              </a>
+                <a href="/TA/{{ data.task_id }}">
+             <button class="train" >普通调度</button>
+                </a>
+                <a href="/DA/{{ data.task_id }}">
+                <button class="train" >查看数据</button>
+                </a>
+                    <a href="/DT/{{ data.task_id }}">
+                <button class="mydelete" >删除数据</button>
+                </a>
+            </td>
+            </tr>
+           {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %} 欢迎来到智能任务调度系统！ {% endblock %}
+
+
+{% block content %}
+     <h1 class="bg-info" style="text-align:center;top:10px">上传数据</h1>
+    <div class="container myContainer">
+    <style>
+			.file-box{
+				display: inline-block;
+				position: relative;
+				padding: 3px 5px;
+				overflow: hidden;
+				color:#fff;
+				background-color: #ccc;
+			}
+		</style>
+       <br>
+            <div class="row col-lg-7 col-lg-offset-3">
+                <form enctype="multipart/form-data" action="/upload/" method="POST">
+	                {% csrf_token %}
+                    <div class="input-group">
+                        数据名（必填）:
+                        <input type="text" size="20px" name="name" required="required" /><br>
+                        <br>
+                        处理机的个数（必填）:
+                        <input type="text" size="15px" name="machine" required="required" />
+                        <br>
+                        <br>
+                        <input type="file" class="file-box" name="upload" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-lg btn-info" type="submit">上传数据</button>
+                        </span>
+                    </div>
+
+                </form>
+            </div>
+    </div>
+
+{% endblock %}

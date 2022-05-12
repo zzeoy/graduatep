@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% block title %} 欢迎来到智能任务调度系统！ {% endblock %}
+{% block content %}
+
+            <style>
+         h2.gray-text {
+            color: #6c6969;
+                }
+         h3.gray-text {
+            color: #575555;
+                }
+         button.mybtn1{
+                        width: 500px;
+                        height: 50px;
+                        background-color: #9acfea;
+                        border-radius: 10px;
+                        border: 1px slategray ;
+                        font-size: 20px;
+                        color: black;
+
+                    }
+         button.mybtn2{
+                        width: 500px;
+                        height: 50px;
+                        background-color: #baa4e5;
+                        border-radius: 10px;
+                        border: 1px slategray ;
+                        font-size: 20px;
+                        color: black;
+                    }
+         button.back{
+                   width: 150px;
+                        height: 50px;
+                        background-color: #f6f7f8;
+                        border-radius: 10px;
+                        border: 1px #d7dee5;
+                        font-size: 20px;
+                        color: #4d4b4b;
+                        font-weight: bold;
+
+
+         }
+
+                </style>
+    <h1  style="text-align:center;top:10px;color: #5e5d5d">在线调度</h1>
+        {%  if  content and result %}
+            <div class="container">
+        <button class="back" onclick="window.location.href='/online' ">返回在线训练</button>
+            </div>
+        {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    </head>
+    <br>
+    <br>
+    <body>
+    {% if not content and not result%}
+    <div class="container myContainer">
+    <form action="/online/train" method="post">
+        {% csrf_token %}
+    <p style="font-weight: bold;font-size: 20px;color: #3c3c3c">请输入训练数据：</p>
+     <textarea style="height: 300px;width: 700px;border: 20px solid #f3f8fc;font-size: 15px;background-color: #f3f8fc" name="data" required="required">
+    例：{"Task":[
+        {   "name": "T1",
+            "pred": null,
+            "weight": 3
+                },
+        {   "name": "T2",
+             "pred": null,
+             "weight": 4
+        },
+        {   "name": "T3",
+             "pred": "T1",
+             "weight": 5
+        },
+        {   "name": "T4",
+             "pred": "T1,T2",
+             "weight": 6
+        },
+        {   "name": "T5",
+             "pred": null,
+             "weight": 7
+        },
+        {   "name": "T6",
+             "pred": "T3,T4",
+             "weight": 8
+        }]}
+
+        </textarea>
+      <br>
+        <p style="font-size: 15px;font-weight: bold"> 处理机数：</p>
+        <input type="number" name="machine" required="required" value="1"style="border: 2px solid slategray">
+        <input type="submit" value="确定"/>
+    </form>
+    </div >
+    {% else %}
+
+        <div class="container myContainer" style="float: right;height: 100%;width: 50%" >
+        <div id="main" style="width: 500px;height:400px;top: 15px;left: 100px"></div>
+         </div>
+        <div class="container myContainer" style="float: left;height: 100%;width: 50%;" >
+         {% if not result %}
+             <h2  class="gray-text">根据您上传的数据推荐使用：{{recommend}} </h2>
+             <h3  class="gray-text">请选择调度算法:</h3>
+            <a href="/online/GA">
+               <button class="mybtn2" >GA调度</button>
+             </a>
+                <br>
+               <br>
+            <a href="/online/TA">
+               <button class="mybtn1"  >TA调度</button>
+            </a>
+          {% else %}
+             <div id="main2"    style="width: 700px;height:400px;left: 100px"></div>
+          {% endif %}
+        </div>
+    {% endif %}
+    </body>
+     <script type="text/javascript">
+         const labelRight = {
+             position: 'right'
+         };
+         let data = "{{ content}}";
+         let result = "{{ result}}";
+         var recommend = "{{ recommend }}";
+         var machine = "{{machine}}";
+         function createData(origin,color) {
+             var data = [];
+             var hlen = origin.length;
+             var col = 0;
+             for (var i = 0; i < origin.length; i++) {
+                 var wlen = origin[i].length;
+                 for (var j = 0; j < wlen; j++) {
+                     console.log(origin[i][j]);
+                     data.push({
+                         name: origin[i][j].name,
+                         value: origin[i][j].weight,
+                         x: (300 / wlen) * j,
+                         y: i * (300 / hlen),
+                         itemStyle: {
+                             normal: {
+                                 color: color[col],
+                             }
+                         }
+                     });
+                     console.log(data);
+                 }
+                 col = (col + 1) % 9;
+             }
+             return data;
+         }
+         function createLink(origin) {
+             var link = [];
+             for (var i = 0; i < origin.length; i++) {
+                 for (var j = 0; j < origin[i].length; j++) {
+                     if (origin[i][j].suc != null) {
+                         for (var k = 0; k < origin[i][j].suc.length; k++) {
+                             link.push({
+                                 source: origin[i][j].name,
+                                 target: origin[i][j].suc[k],
+
+                             });
+                         }
+                     }
+                 }
+             }
+             return link;
+         }
+         function drawData(data){
+             data = data.replaceAll("&quot;", "\"");
+         data = data.replaceAll("\"[", "[");
+         data = data.replaceAll("]\"", "]");
+         var content = JSON.parse(data);
+         console.log('data', content.result);
+         var chartDom = document.getElementById('main');
+         var myChart = echarts.init(chartDom);
+         var option;
+         var color = ['#5dc7ae', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+         var legendData = [];
+         for (var i = 0; i < content.result.length; i++) {
+             for (var j = 0; j < content.result[i].length; j++) {
+                 legendData.push(content.result[i][j].name);
+             }
+         }
+         var Data = createData(content.result, color);
+         var link = createLink(content.result);
+
+         option = {
+             title: {
+                 text: '数据的DAG图',
+                 textStyle: {
+                     fontSize: 30,
+                     fontWeight: 'bold',
+                     color: '#6c6969',
+
+                 },
+                 left: 'center',
+             },
+             tooltip: {},
+             legend: {
+                 orient: 'vertical',
+                 right: 10,
+                 top: 'center',
+                 data: legendData
+
+             },
+             animationDurationUpdate: 1500,
+             animationEasingUpdate: 'quinticInOut',
+             series: [
+                 {
+                     bottom: 10,
+                     type: 'graph',
+                     layout: 'none',
+                     symbolSize: 50,
+                     roam: true,
+                     label: {
+                         show: true
+                     },
+                     edgeSymbol: ['circle', 'arrow'],
+                     edgeSymbolSize: [4, 10],
+                     edgeLabel: {
+                         fontSize: 20
+                     },
+                     data: Data,
+                     links: link,
+                     lineStyle: {
+                         width: 2,
+                     }
+                 }
+             ]
+         };
+         // 使用刚指定的配置项和数据显示图表。
+         myChart.setOption(option);
+         }
+         function getData(data, i, len) {
+             var x_list = [];
+             for (var j = 0; j < len; j++) {
+                 if (j == i) {
+                     x_list.push({value: data, label: labelRight});
+                 } else {
+                     x_list.push({value: 0, label: labelRight});
+                 }
+             }
+             return x_list;
+
+         }
+         function processMachine(task) {
+             if (task.length == 0) {
+                 console.log("empty");
+                 return []; //如果没有任务，则返回空数组
+             }
+             var result = [];
+             var list_p = [];
+             var name = [];
+             list_p.push(task[0].start_time);
+             name.push(null);
+             for (var i = 0; i < task.length - 1; i++) {
+                 list_p.push(task[i].end_time - task[i].start_time);
+                 name.push(task[i].name);
+                 list_p.push(task[i + 1].start_time - task[i].end_time);
+                 name.push(null);
+             }
+             list_p.push(task[task.length - 1].end_time - task[task.length - 1].start_time);
+             name.push(task[task.length - 1].name);
+             result.push(list_p);
+             result.push(name);
+             console.log(result);
+             return result;
+         }
+         function createSeries(data) {
+             var series = [];
+             for (var i = 0; i < data.length; i++) {
+                 if (data[i].length == 0) {
+                     continue;
+                 } else {
+                     for (var j = 0; j < data[i][0].length; j++) {
+                         if (data[i][0][j] != 0) {
+                             if (j %2  == 0) {
+                                 series.push({
+                                     stack: "all",
+                                     type: "bar",
+                                     data: getData(data[i][0][j], i, data.length),
+                                     itemStyle: {
+                                         normal: {
+                                             barBorderColor: 'rgba(0,0,0,0)',
+                                             color: 'rgba(0,0,0,0)'
+                                         },
+                                         emphasis: {
+                                             barBorderColor: 'rgba(0,0,0,0)',
+                                             color: 'rgba(0,0,0,0)'
+                                         }
+                                     }
+                                 });
+                             } else {
+                                 series.push({
+                                     stack: "all",
+                                     name: data[i][1][j],
+                                     type: "bar",
+                                     data: getData(data[i][0][j], i, data.length),
+
+                                 });
+                             }
+                         }
+                     }
+                 }
+             }
+             return series;
+         }
+         function drawResult(result){
+             result = result.replaceAll("&quot;", "\"");
+         result = result.replaceAll("\"[", "[");
+         result = result.replaceAll("]\"", "]");
+         console.log('result', result);
+         var data2 = JSON.parse(result);
+         var schedule = data2.schedule;
+         console.log(schedule);
+         var time = data2.result;
+         var y_list = [];
+         for (var i = 0; i < schedule.length; i++) {
+             y_list.push("machine" + schedule[i]['machine']);
+         }
+         let legend_data;
+         legend_data = [];
+         for (var i = 0; i < schedule.length; i++) {
+             for (var j = 0; j < schedule[i].task.length; j++) {
+                 if (schedule[i].task[j].name != null) {
+                     legend_data.push(schedule[i].task[j].name);
+                 }
+             }
+         }
+
+         var record = [];
+         for (var i = 0; i < schedule.length; i++) {
+             var temp = processMachine(schedule[i]['task']);
+             record.push(temp);
+         }
+         console.log("record", record);
+
+         let series;
+         series = createSeries(record);
+         console.log(series);
+         // 基于准备好的dom，初始化echarts实例
+         {#echarts.registerTheme('theme', theme);#}
+         // 指定图表的配置项和数据
+         let option = {
+
+             textStyle: {
+                 fontWeight: 'bold',
+                 fontSize: 16,
+             },
+             legend: {
+                 orient: 'vertical',
+                 right: 20,
+                 top: 'center',
+                 data: legend_data,
+             },
+             tooltip: {
+                 trigger: 'axis',
+                 axisPointer: {type: 'cross'}
+             },
+             title: {
+                 text: '本次调度供需：' + time + '个时间单位',
+
+             },
+             xAxis: {
+                 type: 'value',
+                 min: 0,
+             },
+             yAxis: {
+                 data: y_list,
+                 axisLabel: {
+                     textStyle: {
+                         fontWeight: 'bold',
+                         fontSize: 13,
+
+                     }
+                 }
+
+
+             },
+             series: series,
+         };
+         // 使用刚指定的配置项和数据显示图表。
+         let mychart = echarts.init(document.getElementById('main2'));
+         mychart.setOption(option);
+         }
+         if(data&&!result){drawData(data);}
+         else if(result&&!data){drawResult(result);}
+         else if(data&&result){drawData(data);drawResult(result);}
+         else{console.log("no data");}
+       </script>
+
+{% endblock %}

@@ -1,0 +1,6 @@
+{"schedule": [
+{"machine": 1, "task": [{"name": "T1", "start_time": 0, "end_time": 3}, {"name": "T3", "start_time": 3, "end_time": 8}, {"name": "T8", "start_time": 20, "end_time": 30}]},
+{"machine": 2, "task": [{"name": "T2", "start_time": 0, "end_time": 4}, {"name": "T4", "start_time": 4, "end_time": 10}, {"name": "T7", "start_time": 11, "end_time": 20}]},
+{"machine": 3, "task": []},
+{"machine": 4, "task": [{"name": "T5", "start_time": 4, "end_time": 11}, {"name": "T6", "start_time": 11, "end_time": 19}]}], "result": "30"}
+{"schedule": {[{"machine": 1, "task": [{"name": "T1", "start_time": 0, "end_time": 3}, {"name": "T2", "start_time": 3, "end_time": 7}, {"name": "T5", "start_time": 7, "end_time": 14}, {"name": "T3", "start_time": 14, "end_time": 19}, {"name": "T4", "start_time": 19, "end_time": 25}, {"name": "T6", "start_time": 25, "end_time": 33}]}]}}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %} 关于 {% endblock %}
+
+{% block content %}
+    <style>
+     button.mybtn1{
+                        width: 200px;
+                        height: 50px;
+                        background-color: #9acfea;
+                        border-radius: 10px;
+                        border: 1px slategray ;
+                        font-size: 20px;
+                        color: black;
+                    }
+     button.mybtn1:hover{
+                        background-color: #9acfea;
+                        color: white;}
+    </style>
+    <head>
+        <meta charset="utf-8">
+       <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    </head>
+    <body>
+    <div style="float: left;width: 80%;height: 100%;">
+     <div id="main" style="width: 800px;height:800px;position: center"></div>
+    </div>
+     <div style="float: right;width: 20%;height: 100%;">
+         <button class="mybtn1" onclick="window.location.href='/statistics'">返回</button>
+     </div>
+
+     </body>
+<script type="text/javascript">
+let data = "{{ content}}";
+let name="{{ name}}";
+function createData(origin,color) {
+             var data = [];
+             var hlen = origin.length;
+             var col = 0;
+             for (var i = 0; i < origin.length; i++) {
+                 var wlen = origin[i].length;
+                 for (var j = 0; j < wlen; j++) {
+                     console.log(origin[i][j]);
+                     data.push({
+                         name: origin[i][j].name,
+                         value: origin[i][j].weight,
+                         x: (300 / wlen) * j,
+                         y: i * (300 / hlen),
+                         itemStyle: {
+                             normal: {
+                                 color: color[col],
+                             }
+                         }
+                     });
+                     console.log(data);
+                 }
+                 col = (col + 1) % 9;
+             }
+             return data;
+         }
+function createLink(origin) {
+             var link = [];
+             for (var i = 0; i < origin.length; i++) {
+                 for (var j = 0; j < origin[i].length; j++) {
+                     if (origin[i][j].suc != null) {
+                         for (var k = 0; k < origin[i][j].suc.length; k++) {
+                             link.push({
+                                 source: origin[i][j].name,
+                                 target: origin[i][j].suc[k],
+
+                             });
+                         }
+                     }
+                 }
+             }
+             return link;
+         }
+function drawData(data,name){
+             data = data.replaceAll("&quot;", "\"");
+         data = data.replaceAll("\"[", "[");
+         data = data.replaceAll("]\"", "]");
+         var content = JSON.parse(data);
+         console.log('data', content.result);
+         var chartDom = document.getElementById('main');
+         var myChart = echarts.init(chartDom);
+         var option;
+         var color = ['#5dc7ae', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+         var legendData = [];
+         for (var i = 0; i < content.result.length; i++) {
+             for (var j = 0; j < content.result[i].length; j++) {
+                 legendData.push(content.result[i][j].name);
+             }
+         }
+         var Data = createData(content.result, color);
+         var link = createLink(content.result);
+
+         option = {
+             title: {
+                 text: '数据'+name+'的DAG图',
+                 textStyle: {
+                     fontSize: 30,
+                     fontWeight: 'bold',
+                     color: '#6c6969',
+
+                 },
+                 left: 'center',
+             },
+             tooltip: {},
+             legend: {
+                 orient: 'vertical',
+                 right: 10,
+                 top: 'center',
+                 data: legendData
+
+             },
+             animationDurationUpdate: 1500,
+             animationEasingUpdate: 'quinticInOut',
+             series: [
+                 {
+                     bottom: 10,
+                     type: 'graph',
+                     layout: 'none',
+                     symbolSize: 50,
+                     roam: true,
+                     label: {
+                         show: true
+                     },
+                     edgeSymbol: ['circle', 'arrow'],
+                     edgeSymbolSize: [4, 10],
+                     edgeLabel: {
+                         fontSize: 20
+                     },
+                     data: Data,
+                     links: link,
+                     lineStyle: {
+                         width: 2,
+                     }
+                 }
+             ]
+         };
+         // 使用刚指定的配置项和数据显示图表。
+         myChart.setOption(option);
+         }
+            drawData(data,name);
+</script>
+{% endblock %}
