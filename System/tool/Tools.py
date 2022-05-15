@@ -91,8 +91,7 @@ def cal(subpopulation, G, M):
             else:
                 list_c[p].appendleft(temp)
             p = next_p(p, M)
-
-    return max(time)
+    return time
 
 
 def check_single(G, i, list_c):

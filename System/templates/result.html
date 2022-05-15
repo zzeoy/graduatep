@@ -15,7 +15,7 @@
   {% if empty_data %}
   <p style="color: #6b6a6a;font-size: 40px;font-weight: bold;text-align: center" > 该数据已被删除</p>
   {% endif %}
-  <div id="main" style="right: -50px;width: 800px;height:400px;position: center;"></div>
+  <div id="main" style="right: -50px;width: 1200px;height:400px;position: center;"></div>
   <script type="text/javascript" src="../static/jquery-3.1.1.min.js">
           // 假设主题名称是 "vintage"
         $.getJSON('../static/westeros.project.json', function(themeJSON) {
@@ -151,9 +151,10 @@
               fontWeight: 'bold',
             fontSize: 16,},
            legend: {
-               orient: 'vertical',
-                right: 10,
+               orient:'vertical',
                 top: 'center',
+                left: 'right',
+                type:'scroll',
                 data: legend_data,
              },
           tooltip: {

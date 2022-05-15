@@ -193,7 +193,7 @@ def fitness_cal(population, G, M):
     fitness = []
     C = calculate_m(G)
     for subpopulation in population:
-        fitness.append(C - cal(subpopulation, G, M))
+        fitness.append(C - max(cal(subpopulation, G, M)))
     return fitness
 
 
@@ -270,20 +270,25 @@ def find_stage(population, G, M):
     best = population[0]
     time = calculate_m(G)
     for subpopulation in population:
-        temp = cal(subpopulation, G, M)
+        temp = max(cal(subpopulation, G, M))
         if temp < time:
             time = temp
             best = subpopulation
         # 为了更新start_time和end_time
-        time = cal(best, G, M)
+        time = max(cal(best, G, M))
     return best, time
 
 
 # 遗传算法
 def GA(G, M):
+
     H = process_dag(G)
     G, Height = add_height(G)
     population = get_initial(H, M)
+    if M<=1:
+        time=max(cal(population[0],G,M))
+        best = process_res(G, population[0])
+        return best,time
     for i in range(T):
         if len(population) >= Num / 10:
             population = get_nest(population, G, M, Height)

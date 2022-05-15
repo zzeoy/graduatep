@@ -42,16 +42,24 @@ table thead th{ background:#ccc;}
              {% endfor %}
             <td>
                  <a href="/RE/{{ data.record_id }}">
-             <button class="btn btn-default btn-lg btn-info" width=50>训练结果</button>
+             <button class="btn btn-default btn-lg btn-info" width=50>调度结果</button>
                  </a>
-                <a href="/DR/{{ data.record_id }}">
-                <button class="btn btn-default btn-lg btn-info" width=50>删除</button>
-                </a>
+
+                <button class="btn btn-default btn-lg btn-info" onclick="delete_history({{ data.record_id }})" width=50>删除</button>
+
             </td>
             </tr>
            {% endfor %}
         </tbody>
     </table>
     </div>
-
+<script>
+     function delete_history(history_id){
+                        if (window.confirm("确认删除记录？")) {
+                            window.location = "http://localhost:8000/DR/"+history_id;
+                        } else {
+                            window.location = "http://localhost:8000/statistics/" ;
+                        }
+                    }
+</script>
 {% endblock %}

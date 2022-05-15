@@ -1,7 +1,21 @@
 import queue
-from System.tool.DataProcess import  process_res
+from System.tool.DataProcess import process_res, trans_Json
 from System.tool.Tools import cal, next_p, pred_empty_num, add_arrange
-from System.tool.Unit import context
+from System.tool.Unit import context2
+
+
+def next_P2(list1, M, G):
+    time = cal(list1, G, M)
+    p = time.index(min(time))
+    return p
+
+
+def is_pred_in(G, node):
+    pred = list(G.predecessors(node))
+    for i in pred:
+        if G.nodes.get(i)['arrange'] == 0:
+            return False
+    return True
 
 
 def schedule(G, list1, p, qe, M):
@@ -9,7 +23,7 @@ def schedule(G, list1, p, qe, M):
         return
     node = qe.get()
     list1[p].append(node)
-    p = next_p(p, M)
+    p = next_P2(list1, M, G)
     sus = list(G.successors(node))
     if len(sus) == 0:
         schedule(G, list1, p, qe, M)
@@ -20,7 +34,7 @@ def schedule(G, list1, p, qe, M):
             sus_temp.append(dic)
         sus_temp.sort(key=lambda x: x['weight'])
         for i in sus_temp:
-            if G.nodes.get(i['name'])['arrange'] == 0:
+            if G.nodes.get(i['name'])['arrange'] == 0 and is_pred_in(G, i['name']):
                 qe.put(i['name'])
                 G.nodes.get(i['name'])['arrange'] = 1
         schedule(G, list1, p, qe, M)
@@ -50,10 +64,6 @@ def TA(G, M):
     if num >= 1:
         G.remove_node("Start")
         machine[0].pop(0)
-    time = cal(machine, G, M)
+    time = max(cal(machine, G, M))
     machine = process_res(G, machine)
     return machine, time
-
-# G = trans_Json(context)
-# machine, time = TA(G,M)
-# print(time)

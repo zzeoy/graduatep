@@ -49,11 +49,13 @@ button.mydelete:hover{
 </style>
 
     <div>
-        {% if not data %}
+        {% if not dataset %}
             <h1 style="text-align:center;color: #9a9898">暂无数据,请上传数据</h1>
         {% else %}
             <h1 style="text-align:center;color: #5e5d5d">上传的数据</h1>
-        {% endif %} %}
+            <button class="train" onclick="window.location.href='/delete_all'">清除所有数据</button>
+        {% endif %}
+    <button class="train" onclick="window.location.href='/create'">随机创建数据</button>
     <table class="table">
     <thead>
         <tr>
@@ -72,20 +74,15 @@ button.mydelete:hover{
              {% for j in data.showdata %}
                 <td width="150" style="font-weight: bold;font-size: 15px;color:#6f7979;">{{j}}</td>
              {% endfor %}
-            <td width="150" style="font-weight: bold;font-size: 15px;color:#6f7979;" contenteditable="true" id="M">{{data.machine}}</td>
+            <td width="150" style="font-weight: bold;font-size: 15px;color:#6f7979;" contenteditable="true" id="{{ data.task_id }}">{{data.machine}}</td>
             <td width="250px">
-
-
              <button class="train " onclick="edit1({{ data.machine }},{{ data.task_id }})">GA调度</button>
-
              <button class="train" onclick="edit2({{ data.machine }},{{ data.task_id }})">普通调度</button>
 
                 <a href="/DA/{{ data.task_id }}">
                 <button class="train" >查看数据</button>
                 </a>
-                    <a href="/DT/{{ data.task_id }}">
-                <button class="mydelete" >删除数据</button>
-                </a>
+                <button class="mydelete" onclick="delete_task({{ data.id }})">删除数据</button>
             </td>
             </tr>
            {% endfor %}
@@ -95,7 +92,7 @@ button.mydelete:hover{
     </div>
             <script type="text/javascript">
                     function edit1(M,task_id){
-                        const x = document.getElementById('M').innerText;
+                        const x = document.getElementById(task_id).innerText;
                         console.log(x);
                         if(x==M){
                             window.location.href="http://localhost:8000/GA/"+task_id+"/"+x;
@@ -108,8 +105,8 @@ button.mydelete:hover{
                                 }
                         }
                     }
-                        function edit2(M,task_id){
-                        const x = document.getElementById('M').innerText;
+                    function edit2(M,task_id){
+                        const x = document.getElementById(task_id).innerText;
                         console.log(x);
                         if(x==M){
                             window.location.href="http://localhost:8000/TA/"+task_id+"/"+x;
@@ -120,6 +117,13 @@ button.mydelete:hover{
                             } else {
                                window.location = "http://localhost:8000/statistics/" ;
                                 }
+                        }
+                    }
+                    function delete_task(task_id){
+                        if (window.confirm("确认删除数据？")) {
+                            window.location = "http://localhost:8000/DT/"+task_id;
+                        } else {
+                            window.location = "http://localhost:8000/statistics/" ;
                         }
                     }
                 </script>

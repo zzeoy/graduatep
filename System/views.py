@@ -1,8 +1,10 @@
 import json
 import os
 from pathlib import Path
+import random
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from System.tool.CreateData import create
 from System.tool.DataProcess import trans_Json, is_json, trans_to_tree
 from System.algorithm import GA, TA
 from System.models import Record, Res, Taskset
@@ -230,11 +232,27 @@ def delete_record(request, record_id):
 def Result(request, record_id):
     result = Res.objects.get(history_id=record_id)
     record = Record.objects.get(id=record_id)
-    task=Taskset.objects.filter(id=record.task_id)
-    if len(list(task))==0 :
+    task = Taskset.objects.filter(id=record.task_id)
+    if len(list(task)) == 0:
         empty_data = "True"
     else:
         empty_data = None
     str_re = str(result)
     str_re = str_re.replace("\'", "\"")
     return render(request, 'result.html', {'result': str_re, 'empty_data': empty_data})
+
+
+def create_task(request):
+    for i in range(10):
+        context = create()
+        context= context.replace("\'", "\"")
+        context = context.replace("None", "null")
+        task = Taskset(name='dataset' + str(i+1), context=context, machine=str(random.randint(1, 30)), train_times=0,
+                       recommend='test数据')
+        task.save()
+    return HttpResponse("创建成功")
+
+
+def delete_all(request):
+    Taskset.objects.all().delete()
+    return HttpResponse("删除成功")
