@@ -140,14 +140,14 @@ def statistics(request):
 def data_show(request, task_id):
     task = Taskset.objects.get(id=task_id)
     context = str(task.context)
-    name=str(task.name)
+    name = str(task.name)
     G = trans_Json(context)
     content = trans_to_tree(G)
     str_re = str(content)
     str_re = str_re.replace("\'", "\"")
     str_re = str_re.replace(" ", "")
     str_re = str_re.replace("\r\n", "")
-    return render(request, 'data.html', {'content': str_re,'name': name})
+    return render(request, 'data.html', {'content': str_re, 'name': name})
 
 
 # 训练的历史记录来显示训练结果
@@ -169,12 +169,12 @@ def history(request):
 
 
 # 使用GA算法来分配任务
-def GA_algorthm(request, task_id,machine):
+def GA_algorthm(request, task_id, machine):
     # 将数据库中的数据提取出来进行包装
     # 简单的训练数据
     task_set = Taskset.objects.get(id=task_id)
     context = task_set.context
-    task_set.machine=machine
+    task_set.machine = machine
     G = trans_Json(context)
     # 加工成DAG图
     M = machine
@@ -189,13 +189,13 @@ def GA_algorthm(request, task_id,machine):
 
 
 # 使用GA算法来分配任务
-def TA_algorthm(request, task_id,machine):
+def TA_algorthm(request, task_id, machine):
     # 将数据库中的数据提取出来进行包装
     # 简单的训练数据
     task_set = Taskset.objects.get(id=task_id)
     context = task_set.context
     G = trans_Json(context)
-    task_set.machine=machine
+    task_set.machine = machine
     M = machine
     # 加工成DAG图
     sample, time = TA.TA(G, M)
@@ -212,15 +212,6 @@ def delete_task(request, task_id):
     # 将数据库中的数据提取出来删除
     task_set = Taskset.objects.get(id=task_id)
     task_set.delete()
-    # 删除相关记录
-    recordset = Record.objects.filter(task_id=task_id)
-    for record in list(recordset):
-        # 删除相关结果
-        resset = Res.objects.filter(history_id=record.id)
-        for res in list(resset):
-            res.delete()
-        record.delete()
-
     return HttpResponse("删除成功")
 
 
@@ -228,7 +219,7 @@ def delete_record(request, record_id):
     # 将数据库中的数据提取出来删除
     record = Record.objects.get(id=record_id)
     record.delete()
-    # 删除相关
+
     resset = Res.objects.filter(history_id=record.id)
     for res in list(resset):
         res.delete()
@@ -238,6 +229,12 @@ def delete_record(request, record_id):
 # 显示训练结果
 def Result(request, record_id):
     result = Res.objects.get(history_id=record_id)
+    record = Record.objects.get(id=record_id)
+    task=Taskset.objects.filter(id=record.task_id)
+    if len(list(task))==0 :
+        empty_data = "True"
+    else:
+        empty_data = None
     str_re = str(result)
     str_re = str_re.replace("\'", "\"")
-    return render(request, 'result.html', {'result': str_re})
+    return render(request, 'result.html', {'result': str_re, 'empty_data': empty_data})
