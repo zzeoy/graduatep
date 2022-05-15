@@ -55,9 +55,9 @@ button.mydelete:hover{
         <tr>
             <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">数据名</th>
             <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">上传时间</th>
-            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">处理机</th>
             <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">推荐使用调度算法</th>
             <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">训练次数</th>
+            <th colspan="2"width="150"style="font-weight: bold;font-size: 15px;color: #3c3c3c">处理机(可编辑修改)</th>
             <th colspan="2"width="250"style="font-weight: bold;font-size: 15px;color: #3c3c3c">进行训练</th>
         </tr>
     </thead>
@@ -68,13 +68,14 @@ button.mydelete:hover{
              {% for j in data.showdata %}
                 <td width="150" style="font-weight: bold;font-size: 15px;color:#6f7979;">{{j}}</td>
              {% endfor %}
+            <td width="150" style="font-weight: bold;font-size: 15px;color:#6f7979;" contenteditable="true" id="M">{{data.machine}}</td>
             <td width="250px">
-              <a href="/GA/{{ data.task_id }}">
-             <button class="train "   >GA调度</button>
-              </a>
-                <a href="/TA/{{ data.task_id }}">
-             <button class="train" >普通调度</button>
-                </a>
+
+
+             <button class="train " onclick="edit1({{ data.machine }},{{ data.task_id }})">GA调度</button>
+
+             <button class="train" onclick="edit2({{ data.machine }},{{ data.task_id }})">普通调度</button>
+
                 <a href="/DA/{{ data.task_id }}">
                 <button class="train" >查看数据</button>
                 </a>
@@ -87,5 +88,34 @@ button.mydelete:hover{
         </tbody>
     </table>
     </div>
-
+            <script type="text/javascript">
+                    function edit1(M,task_id){
+                        const x = document.getElementById('M').innerText;
+                        console.log(x);
+                        if(x==M){
+                            window.location.href="http://localhost:8000/GA/"+task_id+"/"+x;
+                        }
+                        else {
+                            if (window.confirm("修改处理机数为"+x+"，请确认")) {
+                                 window.location = "http://localhost:8000/GA/"+task_id+"/"+x;
+                            } else {
+                               window.location = "http://localhost:8000/statistics/" ;
+                                }
+                        }
+                    }
+                        function edit2(M,task_id){
+                        const x = document.getElementById('M').innerText;
+                        console.log(x);
+                        if(x==M){
+                            window.location.href="http://localhost:8000/TA/"+task_id+"/"+x;
+                        }
+                        else {
+                            if (window.confirm("修改处理机数为"+x+"，请确认")) {
+                                 window.location = "http://localhost:8000/TA/"+task_id+"/"+x;
+                            } else {
+                               window.location = "http://localhost:8000/statistics/" ;
+                                }
+                        }
+                    }
+                </script>
 {% endblock %}

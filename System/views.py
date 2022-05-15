@@ -121,16 +121,18 @@ def upload(request):
 def statistics(request):
     taskset = Taskset.objects.all()
     dataset = []
+    machine = []
     for task in list(taskset):
-        temp = [task.name, task.uploadDate, task.machine, task.recommend, task.train_times]
+        temp = [task.name, task.uploadDate, task.recommend, task.train_times]
         temp2 = {
             'showdata': temp,
+            'machine': task.machine,
             'task_id': task.id
         }
         dataset.append(temp2)
 
     context = {
-        'dataset': dataset
+        'dataset': dataset,
     }
     return render(request, 'statistics.html', context)
 
@@ -167,16 +169,16 @@ def history(request):
 
 
 # 使用GA算法来分配任务
-def GA_algorthm(request, task_id):
+def GA_algorthm(request, task_id,machine):
     # 将数据库中的数据提取出来进行包装
     # 简单的训练数据
     task_set = Taskset.objects.get(id=task_id)
     context = task_set.context
+    task_set.machine=machine
     G = trans_Json(context)
     # 加工成DAG图
-    M = task_set.machine
+    M = machine
     sample, time = GA.GA(G, M)
-
     task_set.train_times = task_set.train_times + 1
     task_set.save()
     r1 = Record(train_data=task_set.name, task_id=task_id, train_type='GA')
@@ -187,13 +189,14 @@ def GA_algorthm(request, task_id):
 
 
 # 使用GA算法来分配任务
-def TA_algorthm(request, task_id):
+def TA_algorthm(request, task_id,machine):
     # 将数据库中的数据提取出来进行包装
     # 简单的训练数据
     task_set = Taskset.objects.get(id=task_id)
     context = task_set.context
     G = trans_Json(context)
-    M = task_set.machine
+    task_set.machine=machine
+    M = machine
     # 加工成DAG图
     sample, time = TA.TA(G, M)
     task_set.train_times = task_set.train_times + 1
