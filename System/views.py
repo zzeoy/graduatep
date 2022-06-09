@@ -2,12 +2,19 @@ import json
 import os
 from pathlib import Path
 import random
+import pandas
+from sklearn.naive_bayes import GaussianNB  # 高斯朴素贝叶斯函数
+import pickle
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+from pandas.core.frame import DataFrame
 from System.tool.CreateData import create
 from System.tool.DataProcess import trans_Json, is_json, trans_to_tree
 from System.algorithm import GA, TA
 from System.models import Record, Res, Taskset
+import csv
 
 
 def index(request):
@@ -34,13 +41,19 @@ def online_train(request):
     prepared_data = content
     G = trans_Json(content)
     content = trans_to_tree(G)
-    recommend = '遗传调度算法'
     str_re = str(content)
     str_re = str_re.replace("\'", "\"")
     str_re = str_re.replace(" ", "")
     str_re = str_re.replace("\r\n", "")
-    if len(list(G.nodes)) <= 10:
+    data = [[int(machine), G.number_of_nodes(), G.number_of_edges()]]
+    data = DataFrame(data)
+    with open('model.pkl', 'rb') as f:
+        clf = pickle.load(f)
+    recommend = clf.predict(data)
+    if recommend == 'TA':
         recommend = '传统调度算法'
+    else:
+        recommend = '遗传调度算法'
     context = {
         'content': str_re,
         'recommend': recommend,
@@ -104,8 +117,13 @@ def upload(request):
             f.close()
             os.remove(position)
             return HttpResponse("内容格式不正确")
-        task = json.loads(content)
-        if len(task['Task']) > 10:
+        G = trans_Json(content)
+        with open('model.pkl', 'rb') as f:
+            model = pickle.load(f)
+        data = [[int(machine), G.number_of_nodes(), G.number_of_edges()]]
+        data = DataFrame(data)
+        result = model.predict(data)
+        if result[0] == "GA":
             recommend = '遗传调度算法'
         else:
             recommend = '传统调度算法'
@@ -174,20 +192,24 @@ def history(request):
 def GA_algorthm(request, task_id, machine):
     # 将数据库中的数据提取出来进行包装
     # 简单的训练数据
-    task_set = Taskset.objects.get(id=task_id)
-    context = task_set.context
-    task_set.machine = machine
-    G = trans_Json(context)
-    # 加工成DAG图
-    M = machine
-    sample, time = GA.GA(G, M)
-    task_set.train_times = task_set.train_times + 1
-    task_set.save()
-    r1 = Record(train_data=task_set.name, task_id=task_id, train_type='GA')
-    r1.save()
-    r2 = Res(schedule=str(sample), result=time, history_id=r1.id)
-    r2.save()
-    return HttpResponse("训练结束,请返回历史记录查看结果")
+    graphviz = GraphvizOutput()  # 语句1
+    # 语句2：在当前目录生成名为 basic.png 的调用关系图
+    graphviz.output_file = 'basic.png'
+    with PyCallGraph(output=graphviz):
+        task_set = Taskset.objects.get(id=task_id)
+        context = task_set.context
+        task_set.machine = machine
+        G = trans_Json(context)
+        # 加工成DAG图
+        M = machine
+        sample, time = GA.GA(G, M)
+        task_set.train_times = task_set.train_times + 1
+        task_set.save()
+        r1 = Record(train_data=task_set.name, task_id=task_id, train_type='GA')
+        r1.save()
+        r2 = Res(schedule=str(sample), result=time, history_id=r1.id)
+        r2.save()
+        return HttpResponse("训练结束,请返回历史记录查看结果")
 
 
 # 使用GA算法来分配任务
@@ -199,15 +221,19 @@ def TA_algorthm(request, task_id, machine):
     G = trans_Json(context)
     task_set.machine = machine
     M = machine
-    # 加工成DAG图
-    sample, time = TA.TA(G, M)
-    task_set.train_times = task_set.train_times + 1
-    task_set.save()
-    r1 = Record(train_data=task_set.name, task_id=task_id, train_type='TA')
-    r1.save()
-    r2 = Res(schedule=str(sample), result=time, history_id=r1.id)
-    r2.save()
-    return HttpResponse("训练结束,请返回历史记录查看结果")
+    graphviz = GraphvizOutput()  # 语句1
+    # 语句2：在当前目录生成名为 basic.png 的调用关系图
+    graphviz.output_file = 'basic2.png'
+    with PyCallGraph(output=graphviz):
+        # 加工成DAG图
+        sample, time = TA.TA(G, M)
+        task_set.train_times = task_set.train_times + 1
+        task_set.save()
+        r1 = Record(train_data=task_set.name, task_id=task_id, train_type='TA')
+        r1.save()
+        r2 = Res(schedule=str(sample), result=time, history_id=r1.id)
+        r2.save()
+        return HttpResponse("训练结束,请返回历史记录查看结果")
 
 
 def delete_task(request, task_id):
@@ -243,16 +269,104 @@ def Result(request, record_id):
 
 
 def create_task(request):
-    for i in range(10):
+    context = create()
+    context = context.replace("\'", "\"")
+    context = context.replace("None", "null")
+    task = Taskset(name='random_dataset', context=context, machine=str(random.randint(1, 5)),
+                   train_times=0,
+                   recommend='test数据')
+    task.save()
+    return HttpResponse("创建成功")
+
+
+def train_model(request):
+    data = pandas.read_csv('data1.csv')
+    x_train = data.iloc[:, [0, 1, 2]].values
+    y_train = data.iloc[:, 3].values
+    print(x_train)
+    print(y_train)
+    BYS = GaussianNB().fit(x_train, y_train)
+
+    test_data = pandas.read_csv('data2.csv')
+    compare = test_data.iloc[:, 3].values
+    test = test_data.iloc[:, [0, 1, 2]].values
+    answer_BYS = BYS.predict(test)
+    num = 0
+    for i in range(len(compare)):
+        if compare[i] == answer_BYS[i]:
+            num = num + 1
+    x = num / len(compare)
+    print("该模型的预测准确度为：",x)
+    pickle.dump(BYS, open('model.pkl', 'wb'))
+    return HttpResponse("训练保存成功")
+
+
+def create_task_test(request):
+    for i in range(1000):
         context = create()
-        context= context.replace("\'", "\"")
+        context = context.replace("\'", "\"")
         context = context.replace("None", "null")
-        task = Taskset(name='dataset' + str(i+1), context=context, machine=str(random.randint(1, 30)), train_times=0,
+        task = Taskset(name='dataset' + str(i + 4001), context=context, machine=str(random.randint(1, 5)),
+                       train_times=0,
                        recommend='test数据')
         task.save()
-    return HttpResponse("创建成功")
+    taskset = Taskset.objects.all()
+
+    for task in taskset:
+        M = task.machine
+        G = trans_Json(task.context)
+        sample1, time1 = TA.TA(G, M)
+        sample2, time2 = GA.GA(G, M)
+        print('TA', time1, 'GA', time2)
+        if time1 <= time2:
+            task.recommend = "TA"
+        else:
+            task.recommend = "GA"
+        task.save()
+    return HttpResponse("保存成功")
+
+
+def export_data(request):
+    f = open('data1.csv', 'w', encoding='utf-8', newline="")
+    f2 = open('data2.csv', 'w', encoding='utf-8', newline="")
+    csv_writer = csv.writer(f)
+    csv_writer.writerow(['machine', 'task_num', 'link_num', 'recommend'])
+    csv_writer2 = csv.writer(f2)
+    csv_writer2.writerow(['machine', 'task_num', 'link_num', 'recommend'])
+    count1 = 0
+    count2 = 0
+    taskset = Taskset.objects.all()
+    for task in taskset:
+        context = task.context
+        G = trans_Json(context)
+        if count1 <= 600:
+            if task.recommend == 'GA':
+                count1 = count1 + 1
+                csv_writer.writerow([task.machine, G.number_of_nodes(), G.number_of_edges(), task.recommend])
+        elif count1 > 600 and count1 <= 800:
+            if task.recommend == 'GA':
+                count1 = count1 + 1
+                csv_writer2.writerow([task.machine, G.number_of_nodes(), G.number_of_edges(), task.recommend])
+        if count2 <= 600:
+            if task.recommend == 'TA':
+                count2 = count2 + 1
+                csv_writer.writerow([task.machine, G.number_of_nodes(), G.number_of_edges(), task.recommend])
+        elif count2 > 600 and count2 <= 800:
+            if task.recommend == 'TA':
+                count2 = count2 + 1
+                csv_writer2.writerow([task.machine, G.number_of_nodes(), G.number_of_edges(), task.recommend])
+    return HttpResponse("文件提取成功")
 
 
 def delete_all(request):
     Taskset.objects.all().delete()
     return HttpResponse("删除成功")
+
+
+def search_GA(request):
+    taskset2 = Taskset.objects.filter(recommend='TA')
+    taskset = Taskset.objects.filter(recommend='GA')
+    print("任务的数量", taskset.count() + taskset2.count())
+    print("其中推荐遗传算法有", taskset.count())
+    print("其中推荐传统算法有", taskset2.count())
+    return HttpResponse("搜索成功")

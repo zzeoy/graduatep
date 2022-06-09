@@ -2,6 +2,8 @@ import random
 from System.tool.DataProcess import trans_Json, process_res, process_dag, height_num
 from System.tool.Tools import cal, check_right, check_single
 from System.tool.Unit import Pc, P_inc, Pm, T, Num, context
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
 
 
 # 在DAG图中添加height属性
@@ -132,9 +134,7 @@ def selection(population, fitness):
 def find_height_pos(h, list1, G):
     for i in range(len(list1)):
         h2 = G.nodes.get(list1[i])['height']
-        print(list1[i], h2)
         if h2 >= h:
-            print("找到了", h, "的位置", i)
             return i
     return len(list1)
 
@@ -201,7 +201,9 @@ def fitness_cal(population, G, M):
 def get_nest(population, G, M, Height):
     # 适应函数的计算
     fitness = fitness_cal(population, G, M)
-    print("适应度为：", fitness)
+    if fitness.count(0) == len(fitness):  # 如果全部为0，则不进行交叉和变异
+        generation = [population[0]]
+        return generation
     # 个体交叉
     next_generation = cross_function(population, G, fitness, M, Height)
     x1 = check_right(next_generation, G)
@@ -224,7 +226,6 @@ def get_nest(population, G, M, Height):
         next_generation_3 = mutable(next_generation_2, G, Height)
     print("变异后的个体数量为：", len(next_generation_3))
     fitness_3 = fitness_cal(next_generation_3, G, M)
-    print("变异后的适应度为：", fitness_3)
     # 轮盘赌注选择
     next_generation_4 = selection(next_generation_3, fitness_3)
     print(len(next_generation_4))
@@ -234,9 +235,30 @@ def get_nest(population, G, M, Height):
 # 该函数为了这一高度的基因随分配到处理机上
 def random_machine(range1, num):
     list1 = []
-    while len(list1) < num:
-        temp = random.randint(0, range1)
-        list1.append(temp)
+    if range1 == 0:
+        for i in range(num):
+            list1.append(0)
+        return list1
+    if num <= range1 + 1:
+        while len(list1) < num:
+            temp = random.randint(0, range1)
+            if temp not in list1:
+                list1.append(temp)
+    else:
+        div = num // (range1 + 1)
+        mod = num % (range1 + 1)
+        for i in range(div):
+            while len(list1) < ( range1 + 1)*(i+1):
+                temp = random.randint(0, range1)
+                if list1.count(temp) <= i:
+                    list1.append(temp)
+        if mod == 0:
+            pass
+        else:
+            while len(list1) < num:
+                temp = random.randint(0, range1)
+                if list1.count(temp) <= div :
+                    list1.append(temp)
     return list1
 
 
@@ -281,21 +303,25 @@ def find_stage(population, G, M):
 
 # 遗传算法
 def GA(G, M):
-
     H = process_dag(G)
     G, Height = add_height(G)
     population = get_initial(H, M)
-    if M<=1:
-        time=max(cal(population[0],G,M))
+    if M <= 1:
+        time = max(cal(population[0], G, M))
         best = process_res(G, population[0])
-        return best,time
+        return best, time
     for i in range(T):
-        if len(population) >= Num / 10:
-            population = get_nest(population, G, M, Height)
-            print('population:', len(population))
+        population = get_nest(population, G, M, Height)
+        print('population:', len(population))
+        if len(population) <= Num / 10:
+            break
     best, time = find_stage(population, G, M)
     best = process_res(G, best)
     return best, time
 
-# G = trans_Json(context)
-# GA(G)
+# graphviz = GraphvizOutput() # 语句1
+#     # 语句2：在当前目录生成名为 basic.png 的调用关系图
+# graphviz.output_file = 'basic.png'
+# with PyCallGraph(output=graphviz):
+#     G = trans_Json(context)
+#     GA(G,3)

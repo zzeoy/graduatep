@@ -1,12 +1,12 @@
-Pc = 0.95
+Pc = 1
 # 内部杂交概率
-P_inc = 0.85
+P_inc = 0.8
 # 变异概率
 Pm = 0.05
 # 迭代数量
 T = 10
 # 初始个体数
-Num = 2000
+Num = 1000
 # 初始个体(用于测试)
 context = "{\"Task\":[{  \"name\": \"T1\",\"pred\": null,\"weight\": 3},{   \"name\": \"T2\",\"pred\": null, " \
           "\"weight\": 4},{\"name\":\"T3\",\"pred\":\"T1\",\"weight\":5},{\"name\":\"T4\",\"pred\":\"T1,T2\"," \

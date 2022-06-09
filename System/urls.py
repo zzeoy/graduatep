@@ -4,7 +4,7 @@ from System import views
 urlpatterns = [
     path('', views.index),
     path('about/', views.about),
-    path('create/', views.create_task),
+    path('create/', views.train_model),
     path('delete_all/', views.delete_all),
     path('online/', views.online),
     path('online/GA', views.online_GA_train),

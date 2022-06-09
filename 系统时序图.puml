@@ -1,0 +1,79 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title 在线调度
+
+actor User as user
+participant "输入数据" as input
+participant "任务数据可视化" as data
+participant "算法调度" as schedule
+participant "调度结果可视化" as result
+autonumber
+
+user-> input : 输入数据+处理机数
+activate input
+activate data
+input-> data : 提供任务数据
+data-> user :展示数据的DAG图
+deactivate data
+activate schedule
+input-> schedule : 将数据进行算法调度(GA or TA)
+deactivate input
+activate result
+schedule-> result : 提供调度结果
+deactivate schedule
+result->user: 展示调度结果图
+deactivate result
+@enduml
+
+@startuml
+'https://plantuml.com/sequence-diagram
+title 离线调度
+
+actor User as user
+participant "上传数据文件" as upload
+participant "任务数据列表" as datalist
+participant "任务数据可视化" as data
+participant "算法调度" as schedule
+participant "历史调度结果列表" as resultlist
+participant "调度结果可视化" as result
+participant "数据库" as db
+autonumber
+activate upload
+user-> upload : 上传文件+处理机数+数据名
+
+activate db
+upload-> db :数据存储
+deactivate upload
+activate datalist
+db-> datalist : 任务数据
+datalist-> user :展示任务数据列表
+user->datalist:选取具体任务数据查看
+activate data
+datalist-> db : task_id
+db-> data : 任务数据
+data-> user :展示任务数据的DAG图
+deactivate data
+activate schedule
+user->datalist:选取具体任务数据进行调度
+datalist-> schedule :task_id 将数据进行算法调度(GA or TA)
+schedule-> db : 调度结果存储
+activate resultlist
+db->resultlist: 提供调度结果列表
+resultlist-> user :展示调度结果列表
+
+user->datalist:选取具体任务数据进行删除
+datalist-> db :task_id 删除任务数据
+deactivate datalist
+activate result
+user->resultlist:选取具体任务数据进行查看
+resultlist-> db:res_id 展示调度结果
+db-> result : 调度结果可视化
+result->user: 展示调度结果图
+deactivate result
+user->resultlist:选取具体任务数据进行删除
+resultlist-> db:res_id 删除该调度结果
+deactivate resultlist
+
+
+
+@enduml

@@ -3,12 +3,12 @@ from System.models import Taskset
 
 
 def create():
-    num = random.randint(1, 60)
+    num = random.randint(1, 40)
     Task = []
     for i in range(num):
-        weight = random.randint(1, 200)
-        p_num = 10
-        while p_num >= 5:
+        weight = random.randint(1,100)
+        p_num = 11
+        while p_num >= 10:
             p_num=random.randint(0, len(Task))
         pred = random.sample(Task, p_num)
         if len(pred) == 0:
